@@ -17,6 +17,20 @@ body {
   -webkit-user-select: none;
 }
 
+/* Accessibility: respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+  .falling-hearts-container,
+  .sparkles-container,
+  .floating-circles {
+    display: none !important;
+  }
+}
+
 .app-container {
   width: 100vw;
   height: 100vh;
@@ -42,6 +56,69 @@ body {
   background-position: center;
   background-attachment: fixed;
   background-repeat: no-repeat;
+}
+
+/* Performance helpers */
+.falling-heart, .sparkle, .circle, .gift-button, .proposal-hearts {
+  will-change: transform, opacity;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Mobile / small screens: reduce expensive effects */
+@media (max-width: 768px) {
+  body, .app-container, .scene {
+    overflow: auto;
+  }
+  .scene {
+    background-attachment: scroll;
+  }
+  /* Reduce heavy filters and shadows on mobile */
+  .proposal-text, .intro-title, .intro-subtitle {
+    filter: none !important;
+    text-shadow: none !important;
+  }
+  .gift-button {
+    width: 110px;
+    height: 110px;
+    font-size: 48px;
+    box-shadow: none;
+  }
+  /* Disable or tone down continuous decorative elements */
+  .floating-circles, .falling-hearts-container, .sparkles-container {
+    pointer-events: none;
+    opacity: 0.9;
+  }
+  /* Avoid heavy backdrops */
+  .scene::before { background-color: rgba(26,26,26,0.6); }
+
+  /* Layout and performance adjustments for small screens */
+  .messages-grid {
+    grid-template-columns: 1fr !important;
+    gap: 18px;
+  }
+
+  /* Make tall cards flow naturally and disable expensive backdrop filters on mobile */
+  .gift-card, .message-card, .love-letter-page {
+    height: auto !important;
+    max-height: none !important;
+    width: 100% !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Reduce decorative animations and effects on small devices */
+  .proposal-hearts, .proposal-text, .intro-subtitle::before, .intro-subtitle::after {
+    animation: none !important;
+  }
+}
+
+/* Medium screens: use 2-column grid for messages */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .messages-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 20px;
+  }
 }
 
 .scene::before {
