@@ -5,6 +5,7 @@ export default function MusicPlayer() {
   const audioRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(true);
   const [canAutoPlay, setCanAutoPlay] = useState(false);
+  const [showOverlay, setShowOverlay] = useState(false);
 
   useEffect(() => {
     // Try to autoplay on load
@@ -20,6 +21,8 @@ export default function MusicPlayer() {
           .catch(() => {
             // Autoplay was blocked, will play on first interaction
             setCanAutoPlay(false);
+            // show an overlay/button for mobile users
+            setShowOverlay(true);
           });
       }
     }
@@ -32,6 +35,7 @@ export default function MusicPlayer() {
         audioRef.current.play().then(() => {
           setIsPlaying(true);
           setCanAutoPlay(true);
+          setShowOverlay(false);
         }).catch(() => {
           console.log("Audio play failed");
         });
@@ -46,11 +50,14 @@ export default function MusicPlayer() {
       document.addEventListener("click", handleInteraction);
       document.addEventListener("keypress", handleInteraction);
       document.addEventListener("touchstart", handleInteraction);
+      // pointerdown is useful on some browsers for first gesture
+      document.addEventListener("pointerdown", handleInteraction);
 
       return () => {
         document.removeEventListener("click", handleInteraction);
         document.removeEventListener("keypress", handleInteraction);
         document.removeEventListener("touchstart", handleInteraction);
+        document.removeEventListener("pointerdown", handleInteraction);
       };
     }
   }, [canAutoPlay]);
@@ -74,9 +81,64 @@ export default function MusicPlayer() {
         src={`${import.meta.env.BASE_URL}music.mp3`}
         loop
         autoPlay
+        playsInline
         onPlay={() => setIsPlaying(true)}
         onPause={() => setIsPlaying(false)}
       />
+      {showOverlay && (
+        <div
+          style={{
+            position: "fixed",
+            inset: 0,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            background: "rgba(0,0,0,0.5)",
+            zIndex: 9999,
+            backdropFilter: "blur(4px)",
+          }}
+          onClick={() => {
+            if (audioRef.current) {
+              audioRef.current.play().then(() => {
+                setIsPlaying(true);
+                setCanAutoPlay(true);
+                setShowOverlay(false);
+              }).catch(() => {
+                // fallback: hide overlay so user can use control
+                setShowOverlay(false);
+              });
+            } else {
+              setShowOverlay(false);
+            }
+          }}
+        >
+          <button
+            style={{
+              background: "linear-gradient(135deg, #e74c3c 0%, #ff6b6b 100%)",
+              color: "white",
+              border: "none",
+              padding: "18px 28px",
+              borderRadius: 999,
+              fontSize: 18,
+              boxShadow: "0 8px 30px rgba(0,0,0,0.3)",
+            }}
+            onClick={(e) => e.stopPropagation()}
+            onPointerDown={() => {
+              if (audioRef.current) {
+                audioRef.current.play().then(() => {
+                  setIsPlaying(true);
+                  setCanAutoPlay(true);
+                  setShowOverlay(false);
+                }).catch(() => {
+                  setShowOverlay(false);
+                });
+              }
+            }}
+          >
+            Tap to play music
+          </button>
+        </div>
+      )}
       <motion.button
         className="music-button"
         onClick={togglePlay}

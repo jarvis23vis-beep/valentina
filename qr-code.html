@@ -91,9 +91,15 @@
         <p class="subtitle">Scan the QR code to visit</p>
         
         <div id="qrcode"></div>
-        
-        <div class="url">
-            https://github.com/devdd1982-bit/valentinadaypyar
+
+        <div style="margin-top:18px; display:flex; gap:8px; justify-content:center; align-items:center; flex-wrap:wrap;">
+            <input id="qr-url-input" type="text" value="https://devdd1982-bit.github.io/valentinadaypyar/" style="padding:10px;border-radius:8px;border:1px solid #ddd; width:100%; max-width:360px;" />
+            <button class="button" id="update-qr">Update QR</button>
+            <button class="button" id="download-jpg">Download JPG</button>
+        </div>
+
+        <div class="url" id="display-url">
+            https://devdd1982-bit.github.io/valentinadaypyar/
         </div>
         
         <div class="instructions">
@@ -104,14 +110,68 @@
     </div>
 
     <script>
-        // Generate QR code
-        const qrcode = new QRCode(document.getElementById('qrcode'), {
-            text: 'https://github.com/devdd1982-bit/valentinadaypyar',
+        // Generate QR code from input value
+        const qrContainer = document.getElementById('qrcode');
+        const urlInput = document.getElementById('qr-url-input');
+        const displayUrl = document.getElementById('display-url');
+
+        let qrcode = new QRCode(qrContainer, {
+            text: urlInput.value,
             width: 300,
             height: 300,
             colorDark: '#e74c3c',
             colorLight: '#ffffff',
             correctLevel: QRCode.CorrectLevel.H
+        });
+
+        function updateQRCode(text) {
+            qrContainer.innerHTML = '';
+            qrcode = new QRCode(qrContainer, {
+                text: text,
+                width: 300,
+                height: 300,
+                colorDark: '#e74c3c',
+                colorLight: '#ffffff',
+                correctLevel: QRCode.CorrectLevel.H
+            });
+            displayUrl.textContent = text;
+        }
+
+        document.getElementById('update-qr').addEventListener('click', () => {
+            const v = urlInput.value.trim();
+            if (v) updateQRCode(v);
+        });
+
+        // Download QR as JPG
+        document.getElementById('download-jpg').addEventListener('click', async () => {
+            // Try to find an img or canvas inside the qrcode container
+            const img = qrContainer.querySelector('img');
+            const canvas = qrContainer.querySelector('canvas');
+            let dataUrl;
+
+            if (canvas) {
+                dataUrl = canvas.toDataURL('image/jpeg', 0.95);
+            } else if (img) {
+                // draw img into canvas then export
+                const c = document.createElement('canvas');
+                c.width = img.naturalWidth || 300;
+                c.height = img.naturalHeight || 300;
+                const ctx = c.getContext('2d');
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0,0,c.width,c.height);
+                ctx.drawImage(img, 0, 0, c.width, c.height);
+                dataUrl = c.toDataURL('image/jpeg', 0.95);
+            } else {
+                alert('QR image not found');
+                return;
+            }
+
+            const a = document.createElement('a');
+            a.href = dataUrl;
+            a.download = 'valentine-qr.jpg';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
         });
 
         function printQR() {
